@@ -1,6 +1,8 @@
 from tkinter.filedialog import askopenfilenames
 from pydub import AudioSegment
+from mutagen.mp3 import MP3
 import tkinter as tk
+import mutagen
 
 
 def getFile():
@@ -19,5 +21,9 @@ def getFile():
 # file = getFile()[0]
 # print(file)
 
-sound = AudioSegment.from_file("............", format="flac")
-# sound.export("........mp3", format="mp3", bitrate="320k")
+sound = AudioSegment.from_file("2 Chainz - We Own It (Fast & Furious).flac", format="flac")
+soundMetadata = mutagen.File("2 Chainz - We Own It (Fast & Furious).flac")
+
+sound.export("2 Chainz - We Own It (Fast & Furious).mp3", format="mp3", bitrate="320k")
+sound = MP3("2 Chainz - We Own It (Fast & Furious).mp3")
+sound = soundMetadata
