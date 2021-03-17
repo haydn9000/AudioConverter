@@ -1,6 +1,6 @@
 from tkinter.filedialog import askopenfilenames
+from pydub.utils import mediainfo
 from pydub import AudioSegment
-from mutagen.mp3 import MP3
 import tkinter as tk
 import mutagen
 
@@ -18,12 +18,28 @@ def getFile():
     return(files)
 
 
-# file = getFile()[0]
-# print(file)
+file = getFile()
 
-sound = AudioSegment.from_file("2 Chainz - We Own It (Fast & Furious).flac", format="flac")
-soundMetadata = mutagen.File("2 Chainz - We Own It (Fast & Furious).flac")
+sound = AudioSegment.from_file(file)
+sound.export(file,
+             format="mp3",
+             bitrate="320k",
+             tags=mediainfo(file)["TAG"])
 
-sound.export("2 Chainz - We Own It (Fast & Furious).mp3", format="mp3", bitrate="320k")
-sound = MP3("2 Chainz - We Own It (Fast & Furious).mp3")
-sound = soundMetadata
+
+# with open('image.jpg', 'wb') as img:
+#    img.write(artwork) # write artwork to new image
+
+
+from mutagen.flac import FLAC, Picture
+
+
+var = FLAC(file)
+pics = var.pictures
+# print(pics)
+
+for p in pics:
+    if p.type == 3:  # Front cover
+        print("\nFound front cover") 
+        with open("cover.jpg", "wb") as f:
+            f.write(p.data)
