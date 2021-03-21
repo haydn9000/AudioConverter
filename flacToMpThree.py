@@ -1,8 +1,10 @@
 from tkinter.filedialog import askopenfilenames
 from pydub.utils import mediainfo
 from pydub import AudioSegment
+from mutagen.flac import FLAC
 import tkinter as tk
-import mutagen
+import eyed3
+import os
 
 
 def getFile():
@@ -18,28 +20,38 @@ def getFile():
     return(files)
 
 
-file = getFile()
+# Convert to to selected format
+file = getFile()[0]
+outExtension = ".mp3"
+fileName = os.path.splitext(file)[0] + outExtension
+print(fileName)
 
 sound = AudioSegment.from_file(file)
-sound.export(file,
+
+sound.export(fileName,
              format="mp3",
              bitrate="320k",
              tags=mediainfo(file)["TAG"])
 
 
-# with open('image.jpg', 'wb') as img:
-#    img.write(artwork) # write artwork to new image
+def getCoverArt(file):
+    """ Get sound front cover """
+    var = FLAC(file)
+    pics = var.pictures
+    # print(pics)
+
+    for p in pics:
+        if p.type == 3:  # Front cover
+            print("\nFound front cover") 
+            with open("cover.jpg", "wb") as f:
+                f.write(p.data)
 
 
-from mutagen.flac import FLAC, Picture
+# Add album cover
+audiofile = eyed3.load(fileName)
+if (audiofile.tag == None):
+    audiofile.initTag()
 
+audiofile.tag.images.set(3, open('cover.jpg','rb').read(), 'image/jpeg')
 
-var = FLAC(file)
-pics = var.pictures
-# print(pics)
-
-for p in pics:
-    if p.type == 3:  # Front cover
-        print("\nFound front cover") 
-        with open("cover.jpg", "wb") as f:
-            f.write(p.data)
+audiofile.tag.save(version=eyed3.id3.ID3_V2_3)
