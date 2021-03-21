@@ -5,6 +5,7 @@
 from tkinter.filedialog import askopenfilenames
 from pydub.utils import mediainfo
 from pydub import AudioSegment
+from datetime import datetime
 from mutagen.flac import FLAC
 import tkinter as tk
 import eyed3
@@ -24,23 +25,41 @@ def getFile():
     return(files)
 
 
-def convertFlacToMpthree(file, outExtension=".mp3"):
-    fileName = os.path.splitext(file)[0] + outExtension
-    print(fileName)
+def convertFlacToMpthree(file, format=".mp3", bitrate="320k", outFileLocation=""):
+    if not outFileLocation:
+        outPath = os.path.join(os.path.dirname(file) + "/converted")
+    else:
+        outPath = outFileLocation
+
+    # Create folder is it doesn't already exist.
+    if not os.path.exists(outPath):
+        os.makedirs(outPath)
+
+    audioName = os.path.splitext(os.path.basename(file))[0]
+    fileName = os.path.join(outPath + f"/{audioName}" + format)
+    print("-----", fileName)
 
     sound = AudioSegment.from_file(file)
 
     sound.export(fileName,
-                format="mp3",
-                bitrate="320k",
+                format=format,
+                bitrate=bitrate,
                 tags=mediainfo(file)["TAG"])
 
     # Add album cover
     audiofile = eyed3.load(fileName)
     if (audiofile.tag == None):
         audiofile.initTag()
+    
+    # audiofile.tag.images.set(3, open('cover.jpg','rb').read(), 'image/jpeg')
 
-    audiofile.tag.images.set(3, open('cover.jpg','rb').read(), 'image/jpeg')
+    var = FLAC(file)
+    pics = var.pictures
+
+    for p in pics:
+        if p.type == 3:  # Front cover
+            # print("\nFound front cover") 
+            audiofile.tag.images.set(3, p.data, "image/jpeg")
 
     """
     You have to set the ID3 version to "V2.3", otherwise the photo won't show up for the file icon.
@@ -64,4 +83,14 @@ def getFlacAudioCoverArt(file):
 
 
 if __name__ == "__main__":
-    pass
+    files = getFile()
+
+    for file in files:
+        if file.lower().endswith(".flac"):
+            try:
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                print(f"{now} - Processing: {file}")
+                convertFlacToMpthree(file)
+            except:
+                continue
